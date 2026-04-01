@@ -15,6 +15,7 @@ const FACULTY_LOGOS: Record<string, string> = {
 };
 
 export default async function Home() {
+  console.log("TEST_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
   const { data: faculties } = await supabase
     .from('faculties')
     .select('*')
