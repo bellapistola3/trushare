@@ -15,11 +15,18 @@ const FACULTY_LOGOS: Record<string, string> = {
 };
 
 export default async function Home() {
-  console.log("TEST_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-  const { data: faculties } = await supabase
+  console.log('[page.tsx] NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
+
+  const { data: faculties, error } = await supabase
     .from('faculties')
     .select('*')
     .order('name');
+
+  if (error) {
+    console.error('[page.tsx] ❌ Supabase error fetching faculties:', JSON.stringify(error));
+  } else {
+    console.log('[page.tsx] ✅ Fetched faculties count:', faculties?.length ?? 0);
+  }
 
   return (
     <div className="flex flex-col min-h-full">
@@ -57,6 +64,20 @@ export default async function Home() {
           <p className="text-center text-xs font-black uppercase tracking-[0.4em] text-[#003366]/30 mb-16">
             Избери факултет, за да започнеш
           </p>
+
+          {/* Debug banner – only visible if env vars are missing in production */}
+          {!process.env.NEXT_PUBLIC_SUPABASE_URL && (
+            <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-2xl text-center text-red-700 font-bold text-sm">
+              ⚠️ NEXT_PUBLIC_SUPABASE_URL is not set. Please add it in Vercel Environment Variables.
+            </div>
+          )}
+
+          {/* Supabase error banner */}
+          {error && (
+            <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-2xl text-center text-red-700 font-bold text-sm">
+              ❌ Database error: {error.message}
+            </div>
+          )}
 
           {faculties && faculties.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -103,6 +124,13 @@ export default async function Home() {
                 );
               })}
             </div>
+          )}
+
+          {/* Fallback if no faculties loaded */}
+          {(!faculties || faculties.length === 0) && !error && (
+            <p className="text-center text-slate-400 mt-8">
+              Няма намерени факултети. Проверете връзката с базата данни.
+            </p>
           )}
         </div>
       </section>
